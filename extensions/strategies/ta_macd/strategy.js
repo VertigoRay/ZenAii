@@ -7,7 +7,7 @@ module.exports = function container (get, set, clear) {
     description: 'Buy when (MACD - Signal > 0) and sell when (MACD - Signal < 0).',
 
     getOptions: function () {
-      this.option('period', 'period length', String, '1m')
+      this.option('period', 'period length', String, '5m')
       this.option('min_periods', 'min. number of history periods', Number, 1000)
       this.option('ema_short_period', 'number of periods for the shorter EMA', Number, 100)
       this.option('ema_long_period', 'number of periods for the longer EMA', Number, 1000)
@@ -53,9 +53,9 @@ module.exports = function container (get, set, clear) {
       }
 
       if (typeof s.period.macd === 'number') {
-        if ((s.period.macd) > 0) {
+        if ((s.period.macd) < 0) {
           s.signal = 'buy';
-        } else if ((s.period.macd) < 0) {
+        } else if ((s.period.macd) > 0) {
           s.signal = 'sell';
         } else {
           s.signal = null;  // hold
