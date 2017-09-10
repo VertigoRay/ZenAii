@@ -7,10 +7,10 @@ module.exports = function container (get, set, clear) {
     description: 'Buy when (MACD - Signal > 0) and sell when (MACD - Signal < 0).',
 
     getOptions: function () {
-      this.option('period', 'period length', String, '1h')
-      this.option('min_periods', 'min. number of history periods', Number, 52)
-      this.option('ema_short_period', 'number of periods for the shorter EMA', Number, 12)
-      this.option('ema_long_period', 'number of periods for the longer EMA', Number, 26)
+      this.option('period', 'period length', String, '1m')
+      this.option('min_periods', 'min. number of history periods', Number, 1000)
+      this.option('ema_short_period', 'number of periods for the shorter EMA', Number, 100)
+      this.option('ema_long_period', 'number of periods for the longer EMA', Number, 1000)
       this.option('signal_period', 'number of periods for the signal EMA', Number, 9)
       this.option('up_trend_threshold', 'threshold to trigger a buy signal', Number, 0)
       this.option('down_trend_threshold', 'threshold to trigger a sold signal', Number, 0)
@@ -30,15 +30,15 @@ module.exports = function container (get, set, clear) {
       }
 
       // compture MACD
-      /*get('lib.ema')(s, 'ema_short', s.options.ema_short_period)
+      get('lib.ema')(s, 'ema_short', s.options.ema_short_period)
       get('lib.ema')(s, 'ema_long', s.options.ema_long_period)
       if (s.period.ema_short && s.period.ema_long) {
         s.period.macd = (s.period.ema_short - s.period.ema_long)
         get('lib.ema')(s, 'signal', s.options.signal_period, 'macd')
         if (s.period.signal) {
-          s.period.macd_histogram = s.period.macd - s.period.signal
+          s.period.macd_histogram = s.period.macd
         }
-      }*/
+      }
       get('lib.ta_macd')(s,'macd','macd_histogram','macd_signal',s.options.ema_long_period,s.options.ema_short_period,s.options.signal_period)
     },
 
@@ -52,10 +52,10 @@ module.exports = function container (get, set, clear) {
         }
       }
 
-      if (typeof s.period.macd_histogram === 'number' && typeof s.lookback[0].macd_histogram === 'number') {
-        if ((s.period.macd_histogram - s.options.up_trend_threshold) > 0 && (s.lookback[0].macd_histogram - s.options.up_trend_threshold) <= 0) {
+      if (typeof s.period.macd === 'number') {
+        if ((s.period.macd) > 0) {
           s.signal = 'buy';
-        } else if ((s.period.macd_histogram + s.options.down_trend_threshold) < 0 && (s.lookback[0].macd_histogram + s.options.down_trend_threshold) >= 0) {
+        } else if ((s.period.macd) < 0) {
           s.signal = 'sell';
         } else {
           s.signal = null;  // hold
@@ -66,15 +66,15 @@ module.exports = function container (get, set, clear) {
 
     onReport: function (s) {
       var cols = []
-      if (typeof s.period.macd_histogram === 'number') {
+      if (typeof s.period.macd === 'number') {
         var color = 'grey'
-        if (s.period.macd_histogram > 0) {
+        if (s.period.macd > 0) {
           color = 'green'
         }
-        else if (s.period.macd_histogram < 0) {
+        else if (s.period.macd < 0) {
           color = 'red'
         }
-        cols.push(z(8, n(s.period.macd_histogram).format('+00.0000'), ' ')[color])
+        cols.push(z(8, n(s.period.macd).format('+00.0000'), ' ')[color])
         cols.push(z(8, n(s.period.overbought_rsi).format('00'), ' ').cyan)
       }
       else {
